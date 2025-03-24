@@ -1,16 +1,20 @@
 use anchor_lang::prelude::*;
 
-declare_id!("6z68wfurCMYkZG51s1Et9BJEd9nJGUusjHXNt4dGbNNF");
+pub mod states;
+pub use states::*;
+pub mod events;
+pub mod instructions;
+use instructions::register::*;
+
+declare_id!("BcTk938M3mM9j4ZmK6SxXg1STavBKTEPeNRKnVLzP7pY");
 
 #[program]
-pub mod basic {
+pub mod did {
+
     use super::*;
 
-    pub fn greet(_ctx: Context<Initialize>) -> Result<()> {
-        msg!("GM!");
-        Ok(())
+    /// 注册身份信息指令
+    pub fn register(ctx: Context<Register>, username: String) -> Result<()> {
+        Register::register(ctx, username)
     }
 }
-
-#[derive(Accounts)]
-pub struct Initialize {}
