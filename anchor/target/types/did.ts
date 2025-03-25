@@ -14,6 +14,96 @@ export type Did = {
   },
   "instructions": [
     {
+      "name": "initiateTransfer",
+      "docs": [
+        "发起账户转让交易"
+      ],
+      "discriminator": [
+        128,
+        229,
+        77,
+        5,
+        65,
+        234,
+        228,
+        75
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "didAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "params.username"
+              }
+            ]
+          }
+        },
+        {
+          "name": "didTransfer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  100,
+                  95,
+                  116,
+                  114,
+                  97,
+                  110,
+                  115,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "didAccount"
+              },
+              {
+                "kind": "arg",
+                "path": "params.transaction_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "initiateTransferParams"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "register",
       "docs": [
         "注册身份信息指令"
@@ -167,6 +257,19 @@ export type Did = {
       ]
     },
     {
+      "name": "didTransfer",
+      "discriminator": [
+        7,
+        125,
+        169,
+        141,
+        253,
+        177,
+        192,
+        31
+      ]
+    },
+    {
       "name": "profile",
       "discriminator": [
         184,
@@ -192,6 +295,19 @@ export type Did = {
         136,
         194,
         135
+      ]
+    },
+    {
+      "name": "transferInitiated",
+      "discriminator": [
+        98,
+        214,
+        85,
+        223,
+        47,
+        85,
+        128,
+        184
       ]
     },
     {
@@ -221,13 +337,33 @@ export type Did = {
     },
     {
       "code": 6002,
+      "name": "accountTooLong",
+      "msg": "Account  should be less than 128 characters"
+    },
+    {
+      "code": 6003,
       "name": "notAuthorized",
       "msg": "Not Authorized"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "onlyOwner",
       "msg": "Only owner allowed"
+    },
+    {
+      "code": 6005,
+      "name": "cantTransferToSelf",
+      "msg": "Cannot transfer to owner"
+    },
+    {
+      "code": 6006,
+      "name": "noAcceptor",
+      "msg": "Acceptor cannot be null in private sales"
+    },
+    {
+      "code": 6007,
+      "name": "invalidDeadline",
+      "msg": "Invalid deadline"
     }
   ],
   "types": [
@@ -262,6 +398,150 @@ export type Did = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "didTransfer",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "initiator",
+            "type": "pubkey"
+          },
+          {
+            "name": "didAcceptor",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "currentOwner",
+            "type": "pubkey"
+          },
+          {
+            "name": "initiateTime",
+            "type": "i64"
+          },
+          {
+            "name": "deadline",
+            "type": "i64"
+          },
+          {
+            "name": "lastUpdateTime",
+            "type": "i64"
+          },
+          {
+            "name": "transferStatus",
+            "type": {
+              "defined": {
+                "name": "didTransferStatus"
+              }
+            }
+          },
+          {
+            "name": "transferType",
+            "type": {
+              "defined": {
+                "name": "didTransferType"
+              }
+            }
+          },
+          {
+            "name": "lamports",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "didTransferStatus",
+      "docs": [
+        "交易状态枚举"
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "pending"
+          },
+          {
+            "name": "completed"
+          },
+          {
+            "name": "cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "didTransferType",
+      "docs": [
+        "交易类型枚举"
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "sellPublic"
+          },
+          {
+            "name": "sellPrivate"
+          },
+          {
+            "name": "buyRequest"
+          }
+        ]
+      }
+    },
+    {
+      "name": "initiateTransferParams",
+      "docs": [
+        "发起交易入参"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "transactionId",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "transferType",
+            "type": {
+              "defined": {
+                "name": "didTransferType"
+              }
+            }
+          },
+          {
+            "name": "username",
+            "type": "string"
+          },
+          {
+            "name": "lamports",
+            "type": "u64"
+          },
+          {
+            "name": "didAcceptor",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "deadline",
+            "type": "i64"
           }
         ]
       }
@@ -367,6 +647,52 @@ export type Did = {
       }
     },
     {
+      "name": "transferInitiated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "username",
+            "type": "string"
+          },
+          {
+            "name": "initiateTime",
+            "type": "i64"
+          },
+          {
+            "name": "deadline",
+            "type": "i64"
+          },
+          {
+            "name": "lamports",
+            "type": "u64"
+          },
+          {
+            "name": "currentOwner",
+            "type": "pubkey"
+          },
+          {
+            "name": "didAcceptor",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "transferType",
+            "type": {
+              "defined": {
+                "name": "didTransferType"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "updateProfileEvent",
       "type": {
         "kind": "struct",
@@ -399,7 +725,7 @@ export type Did = {
         "kind": "struct",
         "fields": [
           {
-            "name": "auhority",
+            "name": "authority",
             "type": {
               "option": "pubkey"
             }

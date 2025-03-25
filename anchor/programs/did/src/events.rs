@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+use crate::enums::DidTransferType;
+
 #[event]
 pub struct RegisterEvent {
     // 用户名（唯一）
@@ -16,7 +18,7 @@ pub struct RegisterEvent {
 }
 
 #[event]
-pub struct UpdateProfileEvent{
+pub struct UpdateProfileEvent {
     pub signer: Pubkey,
 
     pub username: String,
@@ -24,4 +26,23 @@ pub struct UpdateProfileEvent{
     pub update_time: i64,
 
     pub profile: Pubkey,
+}
+
+#[event]
+pub struct TransferInitiated {
+    pub signer: Pubkey,
+
+    pub username: String,
+
+    pub initiate_time: i64,
+
+    pub deadline: i64,
+    
+    pub lamports: u64,
+
+    pub current_owner: Pubkey,
+
+    pub did_acceptor: Option<Pubkey>,
+
+    pub transfer_type: DidTransferType,
 }

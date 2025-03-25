@@ -24,7 +24,6 @@ pub struct UpdateProfile<'info> {
         seeds = [b"profile", username.as_bytes()],
         bump,
         constraint = did_account.owner == signer.key() || profile_account.authority == signer.key() @ CustomError::NotAuthorized,
-
     )]
     pub profile_account: Account<'info, Profile>,
 
@@ -42,7 +41,15 @@ impl UpdateProfile<'_> {
         let profile = &mut ctx.accounts.profile_account;
         let did_account = &mut ctx.accounts.did_account;
         let time = Clock::get()?.unix_timestamp;
-        if let Some(authority) = update_params.auhority {
+
+        // 首次创建时设置初始值
+        if profile.did_account == Pubkey::default() {
+            profile.did_account = did_account.key();
+            profile.authority = ctx.accounts.signer.key();
+            profile.create_time = time;
+        }
+
+        if let Some(authority) = update_params.authority {
             require!(
                 ctx.accounts.signer.key() == did_account.owner.key(),
                 CustomError::OnlyOwner
@@ -101,7 +108,7 @@ impl UpdateProfile<'_> {
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct UpdateProfileParams {
     // 授权可修改此账户的公钥
-    pub auhority: Option<Pubkey>,
+    pub authority: Option<Pubkey>,
 
     // 昵称
     pub nickname: Option<String>,
@@ -130,6 +137,21 @@ impl UpdateProfileParams {
             require!(avatar.len() <= 256, CustomError::AvatarUrlTooLong);
         }
 
+        if let Some(twitter) = &self.twitter {
+            require!(twitter.account.len() < 128, CustomError::AccountTooLong);
+        }
+        if let Some(github) = &self.github {
+            require!(github.account.len() < 128, CustomError::AccountTooLong);
+        }
+        if let Some(email) = &self.email {
+            require!(email.account.len() < 128, CustomError::AccountTooLong);
+        }
+        if let Some(discord) = &self.discord {
+            require!(discord.account.len() < 128, CustomError::AccountTooLong);
+        }
+        if let Some(website) = &self.website {
+            require!(website.account.len() < 128, CustomError::AccountTooLong);
+        }
         Ok(())
     }
 }

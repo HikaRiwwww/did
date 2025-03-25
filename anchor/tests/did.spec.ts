@@ -4,6 +4,7 @@ import { Program } from "@coral-xyz/anchor";
 import { Did } from "../target/types/did";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { BN } from "bn.js";
+import { buffer } from "stream/consumers";
 
 describe("basic", () => {
     // 初始化本地环境
@@ -22,6 +23,7 @@ describe("basic", () => {
 
     let user: Keypair;
     let authorizedUser: Keypair;
+    let buyer: Keypair;
     let didAccount;
     let profilePDA: PublicKey;
     let profileAccount;
@@ -29,6 +31,7 @@ describe("basic", () => {
     beforeAll(async () => {
         // 创建用户，领取空投
         user = anchor.web3.Keypair.generate();
+        buyer = anchor.web3.Keypair.generate();
         console.log("Current User Public Key: ", user.publicKey);
         const airdropSignature = await provider.connection.requestAirdrop(
             user.publicKey,
@@ -40,7 +43,17 @@ describe("basic", () => {
             ...latestBlockhash,
         });
 
-        console.log("User balance: ", provider.connection.getBalance(user.publicKey));
+        const airdropSignature2 = await provider.connection.requestAirdrop(
+            buyer.publicKey,
+            2 * anchor.web3.LAMPORTS_PER_SOL,
+        );
+        const latestBlockhash2 = await provider.connection.getLatestBlockhash();
+        await provider.connection.confirmTransaction({
+            signature: airdropSignature2,
+            ...latestBlockhash2,
+        });
+
+        console.log("Buyer balance: ", provider.connection.getBalance(buyer.publicKey));
     });
 
     it("Should register a did account", async () => {
@@ -91,7 +104,7 @@ describe("basic", () => {
 
     it("Should create a profile account and update profile", async () => {
         const updateParams = {
-            auhority: null,
+            authority: null,
             nickname: nickname,
             avatar: avatar,
             twitter: { account: twitter, visiable: true },
@@ -161,7 +174,7 @@ describe("basic", () => {
     it("Should authorize to another user and the user can update profile", async () => {
         authorizedUser = anchor.web3.Keypair.generate();
         const updateParams1 = {
-            auhority: authorizedUser.publicKey,
+            authority: authorizedUser.publicKey,
             nickname: null,
             avatar: null,
             twitter: null,
@@ -188,7 +201,7 @@ describe("basic", () => {
 
         const newNickname = "kitty";
         const updateParams2 = {
-            auhority: null,
+            authority: null,
             nickname: newNickname,
             avatar: null,
             twitter: null,
@@ -205,15 +218,58 @@ describe("basic", () => {
             .rpc();
 
         console.log("Update Tx2: ", updateTx2);
-		
-		profileAccount = await program.account.profile.fetch(profilePDA);
-		console.log(profileAccount);
-        assert.equal(
-            profileAccount.nickname,
-            newNickname,
-            "New Nickname should be set properly",
+
+        profileAccount = await program.account.profile.fetch(profilePDA);
+        console.log(profileAccount);
+        assert.equal(profileAccount.nickname, newNickname, "New Nickname should be set properly");
+    });
+
+    it("Should initiate a public tansfer", async () => {
+        let newUsername = "test_pub_transfer.sol";
+        let lamports = new BN(100_000);
+        let deadline = new BN(Math.floor(Date.now()) / 1000 + 3600);
+        // 创建一个新的DID
+        await program.methods
+            .register(newUsername)
+            .accounts({
+                signer: user.publicKey,
+            })
+            .signers([user])
+            .rpc({ commitment: "confirmed" });
+        const keypair = anchor.web3.Keypair.generate();
+        const transactionId = Array.from(keypair.publicKey.toBytes());
+        const initTransferTx = await program.methods
+            .initiateTransfer({
+                transactionId: transactionId,
+                deadline: deadline,
+                transferType: { sellPublic: {} },
+                username: newUsername,
+                lamports: lamports,
+                didAcceptor: null,
+            })
+            .accounts({ signer: user.publicKey })
+            .signers([user])
+            .rpc();
+
+        console.log("Initiate transfer Tx: ", initTransferTx);
+
+        const [newDidPda] = anchor.web3.PublicKey.findProgramAddressSync(
+            [Buffer.from("did"), Buffer.from(newUsername)],
+            program.programId,
         );
 
+        const [transferPda] = anchor.web3.PublicKey.findProgramAddressSync(
+            [Buffer.from("did_transfer"), newDidPda.toBuffer(), Buffer.from(transactionId)],
+            program.programId,
+        );
+        console.log("transferPda: ", transferPda);
+        const transferAccount = await program.account.didTransfer.fetch(transferPda);
+        console.log("Transfer account: ", transferAccount);
 
+        assert.equal(transferAccount.currentOwner.toString(), user.publicKey.toString());
+        assert.equal(transferAccount.initiator.toString(), user.publicKey.toString());
+        assert.equal(transferAccount.didAcceptor, null);
+		assert.ok(transferAccount.deadline.eq(deadline));
+        assert.ok(transferAccount.lamports.eq(lamports));
     });
 });
