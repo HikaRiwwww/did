@@ -14,3 +14,14 @@ pub struct RegisterEvent {
     //注册者公钥
     pub registrant: Pubkey,
 }
+
+#[event]
+pub struct UpdateProfileEvent{
+    pub signer: Pubkey,
+
+    pub username: String,
+
+    pub update_time: i64,
+
+    pub profile: Pubkey,
+}

@@ -12,10 +12,7 @@ pub struct DidAccount {
     pub username: String,
 
     // 创建时间
-    pub create_at: i64,
-
-    // 授权（可以更新该账户内容，但不可以操作转账）
-    pub authority: Pubkey,
+    pub create_time: i64,
 
     // 转让次数
     pub transfer_count: u64,

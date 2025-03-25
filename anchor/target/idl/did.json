@@ -59,6 +59,91 @@
           "type": "string"
         }
       ]
+    },
+    {
+      "name": "update_profile",
+      "docs": [
+        "更新账户指令"
+      ],
+      "discriminator": [
+        98,
+        67,
+        99,
+        206,
+        86,
+        115,
+        175,
+        1
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "did_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "username"
+              }
+            ]
+          }
+        },
+        {
+          "name": "profile_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "username"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "username",
+          "type": "string"
+        },
+        {
+          "name": "update_params",
+          "type": {
+            "defined": {
+              "name": "UpdateProfileParams"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -73,6 +158,19 @@
         29,
         237,
         243
+      ]
+    },
+    {
+      "name": "Profile",
+      "discriminator": [
+        184,
+        101,
+        165,
+        188,
+        95,
+        63,
+        127,
+        188
       ]
     }
   ],
@@ -89,6 +187,41 @@
         194,
         135
       ]
+    },
+    {
+      "name": "UpdateProfileEvent",
+      "discriminator": [
+        15,
+        250,
+        133,
+        11,
+        68,
+        57,
+        250,
+        45
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "NicknameTooLong",
+      "msg": "Nickname should be less than 64 characters"
+    },
+    {
+      "code": 6001,
+      "name": "AvatarUrlTooLong",
+      "msg": "Avatar url should be less than 256 characters"
+    },
+    {
+      "code": 6002,
+      "name": "NotAuthorized",
+      "msg": "Not Authorized"
+    },
+    {
+      "code": 6003,
+      "name": "OnlyOwner",
+      "msg": "Only owner allowed"
     }
   ],
   "types": [
@@ -109,12 +242,8 @@
             "type": "string"
           },
           {
-            "name": "create_at",
+            "name": "create_time",
             "type": "i64"
-          },
-          {
-            "name": "authority",
-            "type": "pubkey"
           },
           {
             "name": "transfer_count",
@@ -122,6 +251,82 @@
           },
           {
             "name": "last_transfer_time",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Profile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "did_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "nickname",
+            "type": "string"
+          },
+          {
+            "name": "avatar",
+            "type": "string"
+          },
+          {
+            "name": "twitter",
+            "type": {
+              "defined": {
+                "name": "VisableControlled"
+              }
+            }
+          },
+          {
+            "name": "github",
+            "type": {
+              "defined": {
+                "name": "VisableControlled"
+              }
+            }
+          },
+          {
+            "name": "discord",
+            "type": {
+              "defined": {
+                "name": "VisableControlled"
+              }
+            }
+          },
+          {
+            "name": "website",
+            "type": {
+              "defined": {
+                "name": "VisableControlled"
+              }
+            }
+          },
+          {
+            "name": "email",
+            "type": {
+              "defined": {
+                "name": "VisableControlled"
+              }
+            }
+          },
+          {
+            "name": "create_time",
+            "type": "i64"
+          },
+          {
+            "name": "last_update_time",
             "type": "i64"
           },
           {
@@ -151,6 +356,128 @@
           {
             "name": "registrant",
             "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateProfileEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "username",
+            "type": "string"
+          },
+          {
+            "name": "update_time",
+            "type": "i64"
+          },
+          {
+            "name": "profile",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateProfileParams",
+      "docs": [
+        "profile更新入参"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auhority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "nickname",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "avatar",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "twitter",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "VisableControlled"
+                }
+              }
+            }
+          },
+          {
+            "name": "github",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "VisableControlled"
+                }
+              }
+            }
+          },
+          {
+            "name": "discord",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "VisableControlled"
+                }
+              }
+            }
+          },
+          {
+            "name": "email",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "VisableControlled"
+                }
+              }
+            }
+          },
+          {
+            "name": "website",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "VisableControlled"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "VisableControlled",
+      "docs": [
+        "可控制是否可见的数据"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "account",
+            "type": "string"
+          },
+          {
+            "name": "visiable",
+            "type": "bool"
           }
         ]
       }
