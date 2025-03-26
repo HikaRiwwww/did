@@ -5,23 +5,21 @@ import {
     createTransactionId,
     createTestDidAcount,
     queryEvents,
+    createTestUser,
 } from "./utils/steup";
 import { Keypair } from "@solana/web3.js";
 import assert from "assert";
 import { BN } from "bn.js";
 
 describe("Test DID Profile Update", () => {
-    const username = "test_pub_transfer.sol";
+    const test_username = "test_pub_transfer.sol";
+    const lamports = new BN(100_000);
+    const deadline = new BN(Math.floor(Date.now()) / 1000 + 3600);
     let user: Keypair;
+    let buyer: Keypair;
 
-    beforeAll(async () => {
-        user = await getDefaultUser();
+    async function initPublicSellTransfer(username: string) {
         await createTestDidAcount(username, user);
-    });
-
-    it("Should initiate a public tansfer", async () => {
-        let lamports = new BN(100_000);
-        let deadline = new BN(Math.floor(Date.now()) / 1000 + 3600);
 
         const transactionId = await createTransactionId();
         const initTransferTx = await program.methods
@@ -37,20 +35,29 @@ describe("Test DID Profile Update", () => {
             .signers([user])
             .rpc({ commitment: "confirmed" });
 
-        console.log("Initiate transfer Tx: ", initTransferTx);
-
         const [newDidPda] = anchor.web3.PublicKey.findProgramAddressSync(
-            [Buffer.from("did"), Buffer.from(username)],
+            [Buffer.from("did"), Buffer.from(test_username)],
             program.programId,
         );
 
+        return { newDidPda, initTransferTx, transactionId };
+    }
+
+    beforeAll(async () => {
+        user = await getDefaultUser();
+        buyer = await createTestUser();
+    });
+
+    it("Should initiate a public tansfer", async () => {
+        const { newDidPda, initTransferTx, transactionId } = await initPublicSellTransfer(
+            test_username,
+        );
         const [transferPda] = anchor.web3.PublicKey.findProgramAddressSync(
             [Buffer.from("did_transfer"), newDidPda.toBuffer(), Buffer.from(transactionId)],
             program.programId,
         );
-        console.log("transferPda: ", transferPda);
+
         const transferAccount = await program.account.didTransfer.fetch(transferPda);
-        console.log("Transfer account: ", transferAccount);
 
         assert.equal(transferAccount.currentOwner.toString(), user.publicKey.toString());
         assert.equal(transferAccount.initiator.toString(), user.publicKey.toString());
@@ -58,9 +65,21 @@ describe("Test DID Profile Update", () => {
         assert.ok(transferAccount.deadline.eq(deadline));
         assert.ok(transferAccount.lamports.eq(lamports));
 
-        console.log(
-            "Initialize transfer event: ",
-            await queryEvents(initTransferTx, "transferInitiated"),
-        );
+    });
+
+    it("Should confirm a transfer", async () => {
+        const username = "to_be_confim.sol";
+        const { newDidPda, initTransferTx, transactionId } = await initPublicSellTransfer(username);
+        const confirmTx = await program.methods
+            .confirmTransfer(username, transactionId)
+            .accounts({
+                initiator: user.publicKey,
+                currentOwner: user.publicKey,
+                signer: buyer.publicKey,
+            })
+            .signers([buyer])
+            .rpc({ commitment: "confirmed" });
+
+        const confirmEvent = await queryEvents(initTransferTx, "transferConfirmed");
     });
 });

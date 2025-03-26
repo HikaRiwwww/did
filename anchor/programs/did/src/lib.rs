@@ -6,6 +6,7 @@ pub mod enums;
 pub mod error;
 pub mod events;
 pub mod instructions;
+use instructions::confirm_transfer::*;
 use instructions::register::*;
 use instructions::transfer::*;
 use instructions::update_profile::*;
@@ -37,5 +38,14 @@ pub mod did {
         params: InitiateTransferParams,
     ) -> Result<()> {
         InitiateTransfer::initiate_transfer(ctx, params)
+    }
+
+    /// 确认交易指令
+    pub fn confirm_transfer(
+        ctx: Context<ConfirmTransfer>,
+        username: String,
+        transaction_id: [u8; 32],
+    ) -> Result<()> {
+        ConfirmTransfer::confirm(ctx, username, transaction_id)
     }
 }

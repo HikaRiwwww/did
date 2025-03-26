@@ -46,3 +46,22 @@ pub struct TransferInitiated {
 
     pub transfer_type: DidTransferType,
 }
+
+#[event]
+pub struct TransferConfirmed{
+    pub transaction_id: [u8; 32],
+
+    pub prev_owner: Pubkey,
+
+    pub new_owner: Pubkey,
+
+    pub signer: Pubkey,
+
+    pub confirm_time: i64,
+
+    pub lamports: u64,
+
+    pub transfer_type: DidTransferType,
+
+    pub username: String,
+}

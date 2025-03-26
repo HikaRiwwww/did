@@ -11,8 +11,6 @@ anchor.setProvider(provider);
 const program = anchor.workspace.Did as Program<Did>;
 let DEFAULT_USER: Keypair;
 
-console.log("Current Public Key: ", provider.wallet.publicKey);
-
 export async function createTestUser() {
     const user = anchor.web3.Keypair.generate();
     const airdropSignature = await provider.connection.requestAirdrop(
@@ -49,9 +47,12 @@ export async function getDefaultUser() {
     return DEFAULT_USER;
 }
 
-export async function queryEvents(transactionId: TransactionSignature, eventName: string) {
+export async function queryEvents(transactionSignature: TransactionSignature, eventName: string) {
     // 获取交易详情
-    const txDetails = await provider.connection.getParsedTransaction(transactionId, "confirmed");
+    const txDetails = await provider.connection.getParsedTransaction(
+        transactionSignature,
+        "confirmed",
+    );
     // 解析事件日志
     const eventParser = new anchor.EventParser(
         program.programId,

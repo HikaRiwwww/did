@@ -14,6 +14,109 @@ export type Did = {
   },
   "instructions": [
     {
+      "name": "confirmTransfer",
+      "docs": [
+        "确认交易指令"
+      ],
+      "discriminator": [
+        136,
+        231,
+        254,
+        42,
+        36,
+        94,
+        243,
+        141
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "didTransfer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  100,
+                  95,
+                  116,
+                  114,
+                  97,
+                  110,
+                  115,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "didAccount"
+              },
+              {
+                "kind": "arg",
+                "path": "transactionId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "didAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "username"
+              }
+            ]
+          }
+        },
+        {
+          "name": "initiator",
+          "writable": true
+        },
+        {
+          "name": "currentOwner",
+          "writable": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "username",
+          "type": "string"
+        },
+        {
+          "name": "transactionId",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "initiateTransfer",
       "docs": [
         "发起账户转让交易"
@@ -298,6 +401,19 @@ export type Did = {
       ]
     },
     {
+      "name": "transferConfirmed",
+      "discriminator": [
+        49,
+        14,
+        103,
+        158,
+        58,
+        55,
+        86,
+        66
+      ]
+    },
+    {
       "name": "transferInitiated",
       "discriminator": [
         98,
@@ -364,6 +480,36 @@ export type Did = {
       "code": 6007,
       "name": "invalidDeadline",
       "msg": "Invalid deadline"
+    },
+    {
+      "code": 6008,
+      "name": "invalidAcceptor",
+      "msg": "Current signer is not the acceptor"
+    },
+    {
+      "code": 6009,
+      "name": "invalidTransferStatus",
+      "msg": "Invalid transfer status"
+    },
+    {
+      "code": 6010,
+      "name": "transferExpired",
+      "msg": "Transfer expired"
+    },
+    {
+      "code": 6011,
+      "name": "invalidInitiator",
+      "msg": "Invalid initiator"
+    },
+    {
+      "code": 6012,
+      "name": "insufficentBalance",
+      "msg": "Not enough balance to buy"
+    },
+    {
+      "code": 6013,
+      "name": "invalidAmount",
+      "msg": "Invalid amount"
     }
   ],
   "types": [
@@ -642,6 +788,55 @@ export type Did = {
           {
             "name": "registrant",
             "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "transferConfirmed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "transactionId",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "prevOwner",
+            "type": "pubkey"
+          },
+          {
+            "name": "newOwner",
+            "type": "pubkey"
+          },
+          {
+            "name": "signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "confirmTime",
+            "type": "i64"
+          },
+          {
+            "name": "lamports",
+            "type": "u64"
+          },
+          {
+            "name": "transferType",
+            "type": {
+              "defined": {
+                "name": "didTransferType"
+              }
+            }
+          },
+          {
+            "name": "username",
+            "type": "string"
           }
         ]
       }

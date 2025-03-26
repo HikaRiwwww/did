@@ -8,6 +8,109 @@
   },
   "instructions": [
     {
+      "name": "confirm_transfer",
+      "docs": [
+        "确认交易指令"
+      ],
+      "discriminator": [
+        136,
+        231,
+        254,
+        42,
+        36,
+        94,
+        243,
+        141
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "did_transfer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  100,
+                  95,
+                  116,
+                  114,
+                  97,
+                  110,
+                  115,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "did_account"
+              },
+              {
+                "kind": "arg",
+                "path": "transaction_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "did_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "username"
+              }
+            ]
+          }
+        },
+        {
+          "name": "initiator",
+          "writable": true
+        },
+        {
+          "name": "current_owner",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "username",
+          "type": "string"
+        },
+        {
+          "name": "transaction_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "initiate_transfer",
       "docs": [
         "发起账户转让交易"
@@ -292,6 +395,19 @@
       ]
     },
     {
+      "name": "TransferConfirmed",
+      "discriminator": [
+        49,
+        14,
+        103,
+        158,
+        58,
+        55,
+        86,
+        66
+      ]
+    },
+    {
       "name": "TransferInitiated",
       "discriminator": [
         98,
@@ -358,6 +474,36 @@
       "code": 6007,
       "name": "InvalidDeadline",
       "msg": "Invalid deadline"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidAcceptor",
+      "msg": "Current signer is not the acceptor"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidTransferStatus",
+      "msg": "Invalid transfer status"
+    },
+    {
+      "code": 6010,
+      "name": "TransferExpired",
+      "msg": "Transfer expired"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidInitiator",
+      "msg": "Invalid initiator"
+    },
+    {
+      "code": 6012,
+      "name": "InsufficentBalance",
+      "msg": "Not enough balance to buy"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidAmount",
+      "msg": "Invalid amount"
     }
   ],
   "types": [
@@ -636,6 +782,55 @@
           {
             "name": "registrant",
             "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferConfirmed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "transaction_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "prev_owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "confirm_time",
+            "type": "i64"
+          },
+          {
+            "name": "lamports",
+            "type": "u64"
+          },
+          {
+            "name": "transfer_type",
+            "type": {
+              "defined": {
+                "name": "DidTransferType"
+              }
+            }
+          },
+          {
+            "name": "username",
+            "type": "string"
           }
         ]
       }

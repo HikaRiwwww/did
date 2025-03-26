@@ -25,4 +25,22 @@ pub enum CustomError{
 
     #[msg("Invalid deadline")]
     InvalidDeadline,
+
+    #[msg("Current signer is not the acceptor")]
+    InvalidAcceptor,
+
+    #[msg("Invalid transfer status")]
+    InvalidTransferStatus,
+
+    #[msg("Transfer expired")]
+    TransferExpired,
+
+    #[msg("Invalid initiator")]
+    InvalidInitiator,
+
+    #[msg("Not enough balance to buy")]
+    InsufficentBalance,
+
+    #[msg("Invalid amount")]
+    InvalidAmount,
 }

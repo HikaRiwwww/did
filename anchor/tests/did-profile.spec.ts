@@ -1,5 +1,12 @@
 import * as anchor from "@coral-xyz/anchor";
-import { program, getDefaultUser, queryEvents, createTestDidAcount, provider } from "./utils/steup";
+import {
+    program,
+    getDefaultUser,
+    queryEvents,
+    createTestDidAcount,
+    provider,
+    createTestUser,
+} from "./utils/steup";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import assert from "assert";
 import {
@@ -44,10 +51,8 @@ describe("Test DID Profile Update", () => {
             .accounts({ signer: user.publicKey })
             .signers([user])
             .rpc({ commitment: "confirmed" });
-        console.log("Update profile tx1: ", updateTx1);
 
         profileAccount = await program.account.profile.fetch(profilePDA);
-        console.log("profileAccount: ", profileAccount);
 
         assert.equal(profileAccount.nickname, DEFAULT_NICKNAME, "nickname should match");
         assert.equal(profileAccount.avatar, DEFAULT_AVATAR, "avatar should match");
@@ -91,13 +96,10 @@ describe("Test DID Profile Update", () => {
             updateParams.website.visiable,
             "website visiable should match",
         );
-
-        const updateEvent = await queryEvents(updateTx1, "updateProfileEvent");
-        console.log("Update event: ", updateEvent);
     });
 
     it("Should authorize to another user and the user can update profile", async () => {
-        const authorizedUser = anchor.web3.Keypair.generate();
+        const authorizedUser = await createTestUser();
         const updateParams1 = {
             authority: authorizedUser.publicKey,
             nickname: null,
@@ -138,10 +140,9 @@ describe("Test DID Profile Update", () => {
             .updateProfile(username, updateParams2)
             .accounts({ signer: authorizedUser.publicKey })
             .signers([authorizedUser])
-            .rpc({commitment: "confirmed"});
+            .rpc({ commitment: "confirmed" });
 
         profileAccount = await program.account.profile.fetch(profilePDA);
-        console.log(profileAccount);
         assert.equal(profileAccount.nickname, newNickname, "New Nickname should be set properly");
     });
 });
