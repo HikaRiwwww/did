@@ -48,4 +48,13 @@ pub mod did {
     ) -> Result<()> {
         ConfirmTransfer::confirm(ctx, username, transaction_id)
     }
+
+    /// 取消交易指令
+    pub fn cancel_transfer(
+        ctx: Context<CancelTransfer>,
+        username: String,
+        transaction_id: [u8; 32],
+    ) -> Result<()> {
+        CancelTransfer::cancel(ctx, username, transaction_id)
+    }
 }

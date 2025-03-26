@@ -8,6 +8,101 @@
   },
   "instructions": [
     {
+      "name": "cancel_transfer",
+      "docs": [
+        "取消交易指令"
+      ],
+      "discriminator": [
+        50,
+        32,
+        70,
+        130,
+        142,
+        41,
+        111,
+        175
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "did_transfer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  100,
+                  95,
+                  116,
+                  114,
+                  97,
+                  110,
+                  115,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "did_account"
+              },
+              {
+                "kind": "arg",
+                "path": "transaction_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "did_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "username"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "username",
+          "type": "string"
+        },
+        {
+          "name": "transaction_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "confirm_transfer",
       "docs": [
         "确认交易指令"
@@ -392,6 +487,19 @@
         136,
         194,
         135
+      ]
+    },
+    {
+      "name": "TransferCanceled",
+      "discriminator": [
+        48,
+        179,
+        211,
+        91,
+        195,
+        142,
+        181,
+        219
       ]
     },
     {
@@ -782,6 +890,43 @@
           {
             "name": "registrant",
             "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferCanceled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "transaction_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "transfer_type",
+            "type": {
+              "defined": {
+                "name": "DidTransferType"
+              }
+            }
+          },
+          {
+            "name": "username",
+            "type": "string"
+          },
+          {
+            "name": "cancel_time",
+            "type": "i64"
           }
         ]
       }

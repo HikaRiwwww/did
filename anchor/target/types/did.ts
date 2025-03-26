@@ -14,6 +14,101 @@ export type Did = {
   },
   "instructions": [
     {
+      "name": "cancelTransfer",
+      "docs": [
+        "取消交易指令"
+      ],
+      "discriminator": [
+        50,
+        32,
+        70,
+        130,
+        142,
+        41,
+        111,
+        175
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "didTransfer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  100,
+                  95,
+                  116,
+                  114,
+                  97,
+                  110,
+                  115,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "didAccount"
+              },
+              {
+                "kind": "arg",
+                "path": "transactionId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "didAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  100
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "username"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "username",
+          "type": "string"
+        },
+        {
+          "name": "transactionId",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "confirmTransfer",
       "docs": [
         "确认交易指令"
@@ -398,6 +493,19 @@ export type Did = {
         136,
         194,
         135
+      ]
+    },
+    {
+      "name": "transferCanceled",
+      "discriminator": [
+        48,
+        179,
+        211,
+        91,
+        195,
+        142,
+        181,
+        219
       ]
     },
     {
@@ -788,6 +896,43 @@ export type Did = {
           {
             "name": "registrant",
             "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "transferCanceled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "transactionId",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "transferType",
+            "type": {
+              "defined": {
+                "name": "didTransferType"
+              }
+            }
+          },
+          {
+            "name": "username",
+            "type": "string"
+          },
+          {
+            "name": "cancelTime",
+            "type": "i64"
           }
         ]
       }

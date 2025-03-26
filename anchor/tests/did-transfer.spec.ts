@@ -4,7 +4,6 @@ import {
     getDefaultUser,
     createTransactionId,
     createTestDidAcount,
-    queryEvents,
     createTestUser,
 } from "./utils/steup";
 import { Keypair } from "@solana/web3.js";
@@ -36,11 +35,15 @@ describe("Test DID Profile Update", () => {
             .rpc({ commitment: "confirmed" });
 
         const [newDidPda] = anchor.web3.PublicKey.findProgramAddressSync(
-            [Buffer.from("did"), Buffer.from(test_username)],
+            [Buffer.from("did"), Buffer.from(username)],
+            program.programId,
+        );
+        const [newDidTransferPDA] = anchor.web3.PublicKey.findProgramAddressSync(
+            [Buffer.from("did_transfer"), newDidPda.toBuffer(), Buffer.from(transactionId)],
             program.programId,
         );
 
-        return { newDidPda, initTransferTx, transactionId };
+        return { newDidPda, newDidTransferPDA, initTransferTx, transactionId };
     }
 
     beforeAll(async () => {
@@ -49,9 +52,8 @@ describe("Test DID Profile Update", () => {
     });
 
     it("Should initiate a public tansfer", async () => {
-        const { newDidPda, initTransferTx, transactionId } = await initPublicSellTransfer(
-            test_username,
-        );
+        const { newDidPda, newDidTransferPDA, initTransferTx, transactionId } =
+            await initPublicSellTransfer(test_username);
         const [transferPda] = anchor.web3.PublicKey.findProgramAddressSync(
             [Buffer.from("did_transfer"), newDidPda.toBuffer(), Buffer.from(transactionId)],
             program.programId,
@@ -64,12 +66,12 @@ describe("Test DID Profile Update", () => {
         assert.equal(transferAccount.didAcceptor, null);
         assert.ok(transferAccount.deadline.eq(deadline));
         assert.ok(transferAccount.lamports.eq(lamports));
-
     });
 
     it("Should confirm a transfer", async () => {
         const username = "to_be_confim.sol";
-        const { newDidPda, initTransferTx, transactionId } = await initPublicSellTransfer(username);
+        const { newDidPda, newDidTransferPDA, initTransferTx, transactionId } =
+            await initPublicSellTransfer(username);
         const confirmTx = await program.methods
             .confirmTransfer(username, transactionId)
             .accounts({
@@ -79,7 +81,20 @@ describe("Test DID Profile Update", () => {
             })
             .signers([buyer])
             .rpc({ commitment: "confirmed" });
+    });
 
-        const confirmEvent = await queryEvents(initTransferTx, "transferConfirmed");
+    it("Should cancel a pending transfer", async () => {
+        const username = "to_be_cancled.sol";
+        const { newDidPda, newDidTransferPDA, initTransferTx, transactionId } =
+            await initPublicSellTransfer(username);
+        await program.methods
+            .cancelTransfer(username, transactionId)
+            .accounts({ signer: user.publicKey })
+            .signers([user])
+            .rpc({ commitment: "confirmed" });
+
+        const didTransfer = await program.account.didTransfer.fetch(newDidTransferPDA);
+
+        assert.equal(didTransfer.transferStatus.toString(), { cancelled: {} }.toString());
     });
 });

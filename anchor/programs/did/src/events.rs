@@ -65,3 +65,16 @@ pub struct TransferConfirmed{
 
     pub username: String,
 }
+
+#[event]
+pub struct TransferCanceled{
+    pub transaction_id: [u8; 32],
+
+    pub signer: Pubkey,
+
+    pub transfer_type: DidTransferType,
+
+    pub username: String,
+
+    pub cancel_time: i64,
+}
