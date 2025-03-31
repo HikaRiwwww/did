@@ -27,6 +27,7 @@ describe("Test DID Register", () => {
             })
             .signers([user])
             .rpc({ commitment: "confirmed" });
+            
 
         // 获取已创建的did account
         didAccount = await program.account.didAccount.fetch(didPDA);

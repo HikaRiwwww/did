@@ -99,59 +99,50 @@ describe("Test DID Profile Update", () => {
     });
 
     it("Should authorize to another user and the user can update profile", async () => {
-        try {
-            const authorizedUser = await createTestUser();
-            const updateParams1 = {
-                authority: authorizedUser.publicKey,
-                nickname: null,
-                avatar: null,
-                twitter: null,
-                github: null,
-                discord: null,
-                email: null,
-                website: null,
-            };
+        const authorizedUser = await createTestUser();
+        const updateParams1 = {
+            authority: authorizedUser.publicKey,
+            nickname: null,
+            avatar: null,
+            twitter: null,
+            github: null,
+            discord: null,
+            email: null,
+            website: null,
+        };
 
-            await program.methods
-                .updateProfile(username, updateParams1)
-                .accounts({ signer: user.publicKey })
-                .signers([user])
-                .rpc();
+        await program.methods
+            .updateProfile(username, updateParams1)
+            .accounts({ signer: user.publicKey })
+            .signers([user])
+            .rpc();
 
-            profileAccount = await program.account.profile.fetch(profilePDA);
-            assert.equal(
-                profileAccount.authority.toString(),
-                authorizedUser.publicKey.toString(),
-                "Authorized user public key should match",
-            );
+        profileAccount = await program.account.profile.fetch(profilePDA);
+        assert.equal(
+            profileAccount.authority.toString(),
+            authorizedUser.publicKey.toString(),
+            "Authorized user public key should match",
+        );
 
-            const newNickname = "kitty";
-            const updateParams2 = {
-                authority: null,
-                nickname: newNickname,
-                avatar: null,
-                twitter: null,
-                github: null,
-                discord: null,
-                email: null,
-                website: null,
-            };
+        const newNickname = "kitty";
+        const updateParams2 = {
+            authority: null,
+            nickname: newNickname,
+            avatar: null,
+            twitter: null,
+            github: null,
+            discord: null,
+            email: null,
+            website: null,
+        };
 
-            const updateTx2 = await program.methods
-                .updateProfile(username, updateParams2)
-                .accounts({ signer: authorizedUser.publicKey })
-                .signers([authorizedUser])
-                .rpc({ commitment: "confirmed" });
+        const updateTx2 = await program.methods
+            .updateProfile(username, updateParams2)
+            .accounts({ signer: authorizedUser.publicKey })
+            .signers([authorizedUser])
+            .rpc({ commitment: "confirmed" });
 
-            profileAccount = await program.account.profile.fetch(profilePDA);
-            assert.equal(
-                profileAccount.nickname,
-                newNickname,
-                "New Nickname should be set properly",
-            );
-        } catch (error) {
-            console.log(error);
-            throw error;
-        }
+        profileAccount = await program.account.profile.fetch(profilePDA);
+        assert.equal(profileAccount.nickname, newNickname, "New Nickname should be set properly");
     });
 });
